@@ -1,0 +1,27 @@
+[package]
+name = "itb_rs_lua"
+version = "0.1.0"
+authors = [
+    "kartoFlane"
+]
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+name = "itb_rs_lua"
+crate-type = ["cdylib", "staticlib", "rlib"]
+
+[dependencies]
+# for release builds, use module mode:
+mlua = { version = "0.8.3", features = ["lua51", "module"] }
+# for development builds, use vendored mode:
+#mlua = { version = "0.8.3", features = ["lua51", "vendored"] }
+walkdir = "2.3.2"
+directories = "4.0.1"
+lazy_static = "1.4.0"
+path-absolutize = "3.0.13"
+pathdiff = "0.2.1"
+
+[dev-dependencies]
+tempfile = "3.3.0"
