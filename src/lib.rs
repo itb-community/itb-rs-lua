@@ -1,5 +1,7 @@
 mod io;
+mod ftldat;
 mod lua_exports;
+mod lua_error;
 
 #[no_mangle]
 pub extern "C" fn luaopen_itb_rs(lua_state: *mut mlua::lua_State) -> i32 {

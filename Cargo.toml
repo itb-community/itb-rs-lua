@@ -22,6 +22,7 @@ directories = "4.0.1"
 lazy_static = "1.4.0"
 path-absolutize = "3.0.13"
 pathdiff = "0.2.1"
+ftldat = { path = "../ftldat_rs" }
 
 [dev-dependencies]
 tempfile = "3.3.0"
