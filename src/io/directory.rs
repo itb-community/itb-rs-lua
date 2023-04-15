@@ -58,7 +58,13 @@ impl Directory {
 
     pub fn relativize<P: AsRef<Path>>(&self, path: P) -> Option<String> {
         let normalized_path_relative_to_self = pathdiff::diff_paths(path, &self.path)
-            .map(|path| normalize(&path) + "/");
+            .map(|path| {
+                if path.is_dir() {
+                    normalize(&path) + "/"
+                } else {
+                    normalize(&path)
+                }
+            });
 
         normalized_path_relative_to_self
     }
