@@ -22,7 +22,12 @@ pub fn init(lua: &Lua) -> LuaResult<LuaTable> {
 }
 
 //region <Exported adapter functions>
-fn lua_file(_: &Lua, (path, ): (String, )) -> LuaResult<File> {
+fn lua_file(_: &Lua, (maybe_path, ): (Option<String>, )) -> LuaResult<File> {
+    let path = match maybe_path {
+        None => ".".to_string(),
+        Some(path) => path
+    };
+
     let path = normalize(PathBuf::from(path));
     let normalized_path = path.absolutize()
         .map_err(external_lua_error)?;
@@ -31,7 +36,12 @@ fn lua_file(_: &Lua, (path, ): (String, )) -> LuaResult<File> {
         .map_err(external_lua_error)
 }
 
-fn lua_directory(_: &Lua, (path, ): (String, )) -> LuaResult<Directory> {
+fn lua_directory(_: &Lua, (maybe_path, ): (Option<String>, )) -> LuaResult<Directory> {
+    let path = match maybe_path {
+        None => ".".to_string(),
+        Some(path) => path
+    };
+
     let path = normalize(PathBuf::from(path));
     let normalized_path = path.absolutize()
         .map_err(external_lua_error)?;
