@@ -57,8 +57,10 @@ impl Directory {
     }
 
     pub fn relativize<P: AsRef<Path>>(&self, path: P) -> Option<String> {
-        pathdiff::diff_paths(path, &self.path)
-            .map(|path| normalize(&path))
+        let normalized_path_relative_to_self = pathdiff::diff_paths(path, &self.path)
+            .map(|path| normalize(&path) + "/");
+
+        normalized_path_relative_to_self
     }
 
     pub fn files(&self) -> std::io::Result<Vec<File>> {
