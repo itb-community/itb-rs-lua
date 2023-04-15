@@ -78,7 +78,12 @@ fn directory<P: AsRef<Path>>(path: P) -> std::io::Result<Directory> where PathBu
 }
 
 fn normalize(path: PathBuf) -> PathBuf {
-    let first_component = path.components().into_iter().next().unwrap();
+    let maybe_first_component = path.components().into_iter().next();
+    let first_component = match maybe_first_component {
+        None => Component::Normal("".as_ref()),
+        Some(component) => component
+    };
+
     match first_component {
         // Rust's path library doesn't implicitly treat 'naked' paths in the form
         // of 'some_file.txt' as relative to current directory, so append . in front
