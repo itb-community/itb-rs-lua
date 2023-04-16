@@ -76,8 +76,7 @@ impl PathFilter {
 mod tests {
     use std::fs::OpenOptions;
     use tempfile::tempdir;
-    use crate::io::path_filter::PathFilter;
-    use crate::path_filter::PathFilter;
+    use crate::io::PathFilter;
 
     #[test]
     fn empty_dir_should_not_be_valid_save_data_location() {

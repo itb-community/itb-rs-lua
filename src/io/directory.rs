@@ -4,6 +4,10 @@ use std::path::{Path, PathBuf};
 use walkdir::WalkDir;
 
 use crate::io::file::File;
+use crate::io::has_path::HasPath;
+use crate::io::has_relative_path::HasRelativePath;
+use crate::io::has_root::HasRoot;
+use crate::io::HasParent;
 use crate::io::path_filter::PathFilter;
 use crate::io::util::normalize;
 
@@ -13,52 +17,15 @@ pub struct Directory {
 }
 
 impl Directory {
-    pub fn path(&self) -> String {
-        // Have directories report their path with a trailing slash, since that's sometimes
-        // convenient when working with paths in Lua.
-        normalize(&self.path) + "/"
-    }
-
-    pub fn relative_path(&self) -> std::io::Result<String> {
-        let normalized_path_relative_to_root = self.root()?.relativize(&self.path)
-            .unwrap_or_else(|| "".to_string());
-
-        Ok(normalized_path_relative_to_root)
-    }
-
     pub fn name(&self) -> String {
         self.path.file_name().unwrap().to_str().unwrap().to_string()
     }
 
-    pub fn parent(&self) -> std::io::Result<Option<Directory>> {
-        let maybe_dir = self.path.parent()
-            .map(|parent| Directory::from(parent));
-
-        if let Some(dir) = maybe_dir {
-            if PathFilter::is_whitelisted(&dir.path)? {
-                Ok(Option::Some(dir))
-            } else {
-                Err(Error::new(ErrorKind::Other, "Parent is not an allowed directory"))
-            }
-        } else {
-            Ok(None)
-        }
-    }
-
-    pub fn root(&self) -> std::io::Result<Directory> {
-        let root_path = if self.path.starts_with(PathFilter::game_directory()?) {
-            PathFilter::game_directory()?
-        } else {
-            PathFilter::save_data_directory()?
-        };
-
-        Ok(Directory::from(root_path))
-    }
-
     pub fn relativize<P: AsRef<Path>>(&self, path: P) -> Option<String> {
+        let is_dir = path.as_ref().is_dir();
         let normalized_path_relative_to_self = pathdiff::diff_paths(path, &self.path)
             .map(|path| {
-                if path.is_dir() {
+                if is_dir {
                     normalize(&path) + "/"
                 } else {
                     normalize(&path)
@@ -142,6 +109,20 @@ impl Directory {
     }
 }
 
+impl HasPath for Directory {
+    fn path(&self) -> String {
+        // Have directories report their path with a trailing slash, since that's sometimes
+        // convenient when working with paths in Lua.
+        normalize(&self.path) + "/"
+    }
+}
+
+impl HasParent for Directory {}
+
+impl HasRoot for Directory {}
+
+impl HasRelativePath for Directory {}
+
 impl<P: AsRef<Path>> From<P> for Directory where PathBuf: From<P> {
     fn from(path: P) -> Self {
         Directory {
@@ -152,40 +133,105 @@ impl<P: AsRef<Path>> From<P> for Directory where PathBuf: From<P> {
 
 #[cfg(test)]
 mod tests {
+    use std::path::PathBuf;
+
     use crate::io::directory::Directory;
+    use crate::io::has_parent::HasParent;
+    use crate::io::has_path::HasPath;
+    use crate::io::has_relative_path::HasRelativePath;
     use crate::io::path_filter::PathFilter;
 
     #[test]
     fn path_should_be_reported_with_trailing_slash() {
-        let dir = Directory::from("asd");
+        let dir = Directory::from("test");
 
-        assert_eq!("asd/", dir.path());
-        assert_eq!("asd", dir.path.to_str().unwrap())
+        assert_eq!("test/", dir.path());
+        assert_eq!("test", dir.path.to_str().unwrap())
+    }
+
+    #[test]
+    fn relative_path_should_be_reported_with_trailing_slash() {
+        let tmp_dir = tempfile::TempDir::new().unwrap();
+        let dir = Directory::from(tmp_dir.path());
+
+        assert!(dir.relative_path().unwrap().ends_with("/"));
+    }
+
+    #[test]
+    fn relativize_should_return_none_for_path_in_different_root() {
+        let dir = Directory::from("test");
+        let separate_dir = Directory::from(PathFilter::save_data_directory().unwrap());
+
+        let result = separate_dir.relativize(dir.path);
+
+        assert!(result.is_none());
     }
 
     #[test]
     fn relativize_should_remove_common_path() {
-        let dir = Directory::from("some/path");
-        let maybe_relative = dir.relativize("some/path/test");
-
-        assert_eq!("test", maybe_relative.unwrap());
-    }
-
-    #[test]
-    fn relativize_should_add_shorthands() {
         let dir = Directory::from("some/path/test");
-        let maybe_relative = dir.relativize("some");
+        let parent_dir = dir.parent().unwrap();
 
-        assert_eq!("../..", maybe_relative.unwrap());
+        let result = parent_dir.relativize(dir.path());
+
+        assert!(result.is_some());
+        let relative_path = result.unwrap();
+        assert!(!relative_path.contains(&parent_dir.path()));
     }
 
     #[test]
-    fn is_ancestor_should_return_true_for_absolute_child_path() {
+    fn relativize_should_add_parent_shorthands() {
+        let dir = Directory::from("some/path/test");
+        let result = dir.relativize("some");
+
+        assert!(result.is_some());
+        let relative_path = result.unwrap();
+        assert_eq!("../..", relative_path);
+    }
+
+    #[test]
+    fn relativize_should_report_path_with_trailing_slash_if_directory_exists_on_file_system() {
+        let tmp_file = tempfile::NamedTempFile::new().unwrap();
+        let tmp_dir = tmp_file.path().parent().unwrap();
+
+        let dir = Directory::from(tmp_dir);
+        let parent_dir = Directory::from(tmp_dir.parent().unwrap());
+
+        let result = parent_dir.relativize(dir.path());
+
+        assert!(result.is_some());
+        let relative_path = result.unwrap();
+        assert!(relative_path.ends_with("/"));
+    }
+
+    #[test]
+    fn is_ancestor_should_return_true_for_child_absolute_path() {
         let dir = Directory::from(PathFilter::game_directory().unwrap().join("some/path"));
-        let test_path = Directory::from(dir.path.join("test")).path;
+        let test_path = dir.path.join("test");
         let result = dir.is_ancestor(test_path);
 
         assert!(result.is_ok());
         assert!(result.unwrap());
+    }
+
+    #[test]
+    fn is_ancestor_should_return_false_for_non_child_absolute_path() {
+        let dir = Directory::from(PathFilter::game_directory().unwrap().join("some/path"));
+        let test_path = dir.path.parent().unwrap().join("test");
+
+        let result = dir.is_ancestor(test_path);
+
+        assert!(result.is_ok());
+        assert!(!result.unwrap());
+    }
+
+    #[test]
+    fn is_ancestor_should_return_error_for_relative_path() {
+        let dir = Directory::from(PathFilter::game_directory().unwrap().join("some/path"));
+        let test_path = PathBuf::from("test");
+
+        let result = dir.is_ancestor(test_path);
+
+        assert!(result.is_err());
     }
 }

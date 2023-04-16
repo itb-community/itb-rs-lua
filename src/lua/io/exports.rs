@@ -6,7 +6,7 @@ use mlua::{Lua, UserDataMethods, Variadic};
 use mlua::prelude::{LuaError, LuaResult, LuaTable, LuaUserData};
 use path_absolutize::Absolutize;
 
-use crate::io::Directory;
+use crate::io::{Directory, HasParent, HasPath, HasRelativePath, HasRoot};
 use crate::io::File;
 use crate::io::PathFilter;
 
@@ -205,11 +205,11 @@ impl LuaUserData for Directory {
                 .map_err(external_lua_error)
         });
 
-        methods.add_method("relativize", |_, this, (path,): (String,)| {
+        methods.add_method("relativize", |_, this, (path, ): (String, )| {
             Ok(this.relativize(path))
         });
 
-        methods.add_method("file", |_, this, (paths,): (Variadic<String>,)| {
+        methods.add_method("file", |_, this, (paths, ): (Variadic<String>, )| {
             let path: PathBuf = paths.iter().collect();
             let path = this.path.join(path);
             let normalized_path = path.absolutize()
@@ -219,7 +219,7 @@ impl LuaUserData for Directory {
                 .map_err(external_lua_error)
         });
 
-        methods.add_method("directory", |_, this, (paths,): (Variadic<String>,)| {
+        methods.add_method("directory", |_, this, (paths, ): (Variadic<String>, )| {
             let path: PathBuf = paths.iter().collect();
             let path = this.path.join(path);
             let normalized_path = path.absolutize()
@@ -248,7 +248,7 @@ impl LuaUserData for Directory {
             Ok(this.exists())
         });
 
-        methods.add_method("is_ancestor", |_, this, (path,): (String,)| {
+        methods.add_method("is_ancestor", |_, this, (path, ): (String, )| {
             this.is_ancestor(path)
                 .map_err(external_lua_error)
         });
