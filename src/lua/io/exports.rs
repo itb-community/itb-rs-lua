@@ -6,9 +6,9 @@ use mlua::{Lua, UserDataMethods, Variadic};
 use mlua::prelude::{LuaError, LuaResult, LuaTable, LuaUserData};
 use path_absolutize::Absolutize;
 
-use crate::io::directory::Directory;
-use crate::io::file::File;
-use crate::io::path_filter::PathFilter;
+use crate::io::Directory;
+use crate::io::File;
+use crate::io::PathFilter;
 
 /// Build the module's exports table, governing what is exposed to Lua.
 pub fn init(lua: &Lua) -> LuaResult<LuaTable> {

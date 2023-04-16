@@ -1,14 +1,14 @@
 use mlua::Lua;
 use mlua::prelude::{LuaResult, LuaTable};
 
-use crate::{ftldat, io};
+use crate::lua;
 
 /// Build the module's exports table, governing what is exposed to Lua.
 pub fn init(lua: &Lua) -> LuaResult<LuaTable> {
     let exports = lua.create_table()?;
 
-    exports.set("io", io::lua_exports::init(lua)?)?;
-    exports.set("ftldat", ftldat::lua_exports::init(lua)?)?;
+    exports.set("io", lua::io::exports::init(lua)?)?;
+    exports.set("ftldat", lua::ftldat::exports::init(lua)?)?;
 
     Ok(exports)
 }

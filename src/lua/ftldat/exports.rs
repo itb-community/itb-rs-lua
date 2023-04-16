@@ -4,7 +4,7 @@ use ftldat::error::PackageReadError;
 use ftldat::{Package, PackageEntry};
 use mlua::{Lua, UserDataMethods};
 use mlua::prelude::{LuaResult, LuaTable, LuaUserData};
-use crate::lua_error::external_lua_error;
+use crate::lua::error::external_lua_error;
 
 /// Build the module's exports table, governing what is exposed to Lua.
 pub fn init(lua: &Lua) -> LuaResult<LuaTable> {
@@ -50,7 +50,7 @@ impl LuaPackageWrapper {
     }
 
     fn read_from_path<P: AsRef<Path>>(path: P) -> Result<LuaPackageWrapper, PackageReadError> {
-        ftldat::dat::read_package_from_path(path)
+        Package::from_path_dat(path)
             .map(|package| {
                 LuaPackageWrapper(Some(package))
             })
@@ -60,7 +60,7 @@ impl LuaPackageWrapper {
 impl LuaUserData for LuaPackageWrapper {
     fn add_methods<'lua, M: UserDataMethods<'lua, Self>>(methods: &mut M) {
         methods.add_method_mut("to_file", |_, this, (path, ): (String, )| {
-            ftldat::dat::write_package_into_path(this.package(), &path)
+            Package::into_path_dat(this.package(), &path)
                 .map_err(external_lua_error)
         });
 
