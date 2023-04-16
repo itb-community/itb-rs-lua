@@ -7,8 +7,8 @@ use crate::lua;
 pub fn init(lua: &Lua) -> LuaResult<LuaTable> {
     let exports = lua.create_table()?;
 
-    exports.set("io", lua::io::exports::init(lua)?)?;
-    exports.set("ftldat", lua::ftldat::exports::init(lua)?)?;
+    exports.set("io", lua::io::init(lua)?)?;
+    exports.set("ftldat", lua::ftldat::init(lua)?)?;
 
     Ok(exports)
 }
