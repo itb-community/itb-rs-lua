@@ -1,6 +1,28 @@
-# ITB Rust Lua bridge
+# ITB Rust-Lua bridge
 
-Rust-Lua bridge that exports several useful functions, to aid in development of mods for the game Into the Breach.
+Lua bindings of various utilities used in development of mods for the game Into the Breach.
+
+# Modules
+
+This repository incorporates projects that were previously standalone, as a way to reduce maintenance burden, and
+lower the total size of libraries included in each Mod Loader release (mostly due to each of them including the
+`mlua` library).
+
+Currently, bindings for the following modules are exposed:
+
+### ITB-IO
+
+Lua-interfacing library of helper functions related to dealing with basic IO and file system navigation, in a way
+that prevents Lua from touching files it is not allowed to.
+
+Previously housed at https://github.com/itb-community/itb-io-rs, now fully incorporated into this project.
+
+### FTLDat
+
+Rust implementation of FTLDat - a simple library for unpacking and repacking of .dat files, which are used by the
+games Into the Breach and Faster than Light.
+
+Included as a crate dependency. Maintained at https://github.com/itb-community/ftldat-rs.
 
 # Building
 
