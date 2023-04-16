@@ -47,24 +47,9 @@ Load the library in your Lua script:
 -- with functions `new_package` and `read_package`
 package.loadlib("itb_rs_lua.dll", "luaopen_itb_rs_lua")()
 
--- read a .dat file into memory
-pack = itb_rs_lua.ftldat.read_package("path/to/resource.dat")
-
--- add an entry - this can fail if the entry already exists
-pack:add_text_entry("img/some/file.txt", "the file's content")
-
--- alternatively, put an entry, which can overwrite an existing entry
-pack:put_text_entry("img/some/file.txt", "another content")
-
--- can also read an entry's content:
-content = pack:content_text_by_path("img/some/file.txt")
-
--- write out the package from memory to a file
-pack:to_file("path/to/resource.dat")
-
--- binary content can be read/written, too. This is done in the form of byte arrays,
--- which in Lua take the shape of tables of numbers.
-pack:put_binary_entry("img/image.png", { 1, 2, 3, 4, 5 })
+-- access exported fields or functions
+local ftldat_module = itb_rs_lua.ftldat;
+local io_module = itb_rs_lua.io;
 ```
 
 # Troubleshooting
@@ -80,15 +65,6 @@ of a sour aftertaste after getting everything else to work. It also has the adva
 Building in module mode under Windows requires linking to a Lua dll (as mentioned in the link).
 This is what the `lua` directory and `build.sh` script are for - if you don't want to run the script file, you'll need
 to set the variables from the script in your desired environment.
-
-# Areas to Improve
-
-Considering that this project served me as a way to familiarize myself with Rust, there's bound to be a lot of room for
-improvement. In no particular order:
-- Error handling. Tried to use `thiserror`, a popular crate for error-handling, but I don't feel particularly confident about it.
-- Ownership of strings, I just used heap-allocated Strings and copied them left and right
-- Naming of functions, following proper Rust conventions (`from`, `into`, etc.)
-- Serialization of structs to bytes can probably be handled better (though I like keeping in-memory and on-disk representations separate)
 
 # Attributions
 
